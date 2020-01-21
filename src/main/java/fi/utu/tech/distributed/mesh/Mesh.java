@@ -37,33 +37,39 @@ public class Mesh {
      */
     public void close() {
 	}
-
+		
     /**
-     * Lisää token, eli "viestitunniste"
-     * Käytännössä merkkaa viestin tällä tunnisteella luetuksi
-     * Määreenä private, koska tätä käyttävä luokka on sisäluokka (inner class)
-     * Jos et käytä sisäluokkaa, pitää olla public
-     * @param token Viestitunniste 
+     * Sisäluokka, joka huolehtii solmujen vertaiskommunikaatiosta
      */
-    private void addToken(long token) {
-	}
-
-    /**
-     * Tarkista, onko viestitunniste jo olemassa
-     * Määreenä private, koska tätä käyttävä luokka on sisäluokka (inner class)
-     * Jos et käytä sisäluokkaa, pitää olla public
-     * @param token Viestitunniste 
-     */
-    private boolean tokenExists(long token) {
-		return false;
-	}
-
-    /**
-     * Yhdistä tämä vertainen olemassaolevaan Mesh-verkkoon
-     * @param addr Solmun ip-osoite, johon yhdistetään
-     * @param port Portti, jota vastapuolinen solmu kuuntelee
-     */
-    public void connect(InetAddress addr, int port) {
-	}
+	class NodeConnector {
+		
+		/**
+		 * Lisää token, eli "viestitunniste"
+		 * Käytännössä merkkaa viestin tällä tunnisteella luetuksi
+		 * Määreenä private, koska tätä käyttävä luokka on sisäluokka (inner class)
+		 * Jos et käytä sisäluokkaa, pitää olla public
+		 * @param token Viestitunniste 
+		 */
+		private void addToken(long token) {
+		}
+		
+		/**
+		 * Tarkista, onko viestitunniste jo olemassa
+		 * Määreenä private, koska tätä käyttävä luokka on sisäluokka (inner class)
+		 * Jos et käytä sisäluokkaa, pitää olla public
+		 * @param token Viestitunniste 
+		 */
+		private boolean tokenExists(long token) {
+			return false;
+		}
+		
+		/**
+		 * Yhdistä tämä vertainen olemassaolevaan Mesh-verkkoon
+		 * @param addr Solmun ip-osoite, johon yhdistetään
+		 * @param port Portti, jota vastapuolinen solmu kuuntelee
+		 */
+		public void connect(InetAddress addr, int port) {
+		}
+    }
 
 }
