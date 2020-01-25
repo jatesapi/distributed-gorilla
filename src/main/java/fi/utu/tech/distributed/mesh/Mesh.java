@@ -1,20 +1,43 @@
 package fi.utu.tech.distributed.mesh;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 
-public class Mesh {
+public class Mesh extends Thread {
+	
+	private ServerSocket serverSocket;
+	
     /**
      * Luo Mesh-palvelininstanssi
      * @param port Portti, jossa uusien vertaisten liittymispyyntöjä kuunnellaan
      */
     public Mesh(int port) {
+    	try {
+    		serverSocket = new ServerSocket(port);
+    		System.out.println("Starting the server...");
+    		System.out.println("Listening to port " + serverSocket.getLocalPort() + " at " + serverSocket.getInetAddress());
+    	} catch (IOException e) {
+    		e.printStackTrace();
+    	}
 	}
   
     /**
      *  Käynnistä uusien vertaisten kuuntelusäie
      */
     public void run() {
+    	
+    	while(true) {
+    		try {
+	            new Handler(serverSocket.accept(), this).start();
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    		}
+    	}
 	}
 
     /**
@@ -37,11 +60,34 @@ public class Mesh {
      */
     public void close() {
 	}
-		
+	
+    
+    
+    
     /**
      * Sisäluokka, joka huolehtii solmujen vertaiskommunikaatiosta
      */
-	class NodeConnector {
+	class Handler extends Thread {
+		
+		private Socket socket;
+		private Mesh mesh;
+		
+		public Handler(Socket socket, Mesh mesh) {
+			this.socket = socket;
+			this.mesh = mesh;
+		}
+		
+		@Override
+		public void run() {
+            try {
+				InputStream iS = socket.getInputStream();
+	            OutputStream oS = socket.getOutputStream();
+	            
+	            
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		
 		/**
 		 * Lisää token, eli "viestitunniste"

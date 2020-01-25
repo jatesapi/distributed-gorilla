@@ -2,6 +2,7 @@ package fi.utu.tech.distributed.gorilla.logic;
 
 import fi.utu.tech.distributed.gorilla.views.MainCanvas;
 import fi.utu.tech.distributed.gorilla.views.Views;
+import fi.utu.tech.distributed.mesh.Mesh;
 import fi.utu.tech.oomkit.app.AppConfiguration;
 import fi.utu.tech.oomkit.app.GraphicalAppLogic;
 import fi.utu.tech.oomkit.canvas.Canvas;
@@ -25,6 +26,8 @@ public class GorillaLogic implements GraphicalAppLogic {
     private final MainCanvas mainCanvas = new MainCanvas();
     public Views views;
 
+    private Mesh mesh;
+    
     protected GameState gameState;
     private GameMode gameMode;
 
@@ -146,11 +149,40 @@ public class GorillaLogic implements GraphicalAppLogic {
         // IDEA: Run -> Edit configurations -> Program arguments
         // Eclipse (Ran as Java Application): Run -> Run configuration... -> Java Application -> Main (varies) -> Arguments -> Program arguments
 
-        // Start server on the port given as a command line parameter or 1234
-        startServer(parameters.getNamed().getOrDefault("port", "1234"));
+    	//TODO:
+    	/*
+    	 * startServer, aloittaa palvelimen
+    	 * connectToServer, liittyy jo olemassa olevaan palvelimeen
+    	 * 
+    	 * Komentoriviparametreilla pelin saa käynnistettyä joko palvelimena tai yhdistää toiseen
+    	 * (palvelin) --port=49999
+    	 * (yhteys toiseen palvelimeen) --server=localhost --port=49999
+    	 * 
+    	 * Ensimmäisen ohjelma instanssin täytyy olla serveri.
+    	 * Myös jokaisen pelin joka yhdistää palvelimeen, pitäisi olla serveri.
+    	 * Eli myös ajaa StartServer -metodi
+    	 * 
+    	 * Ainoa ongelma on minkä portin "uusi" ohjelma avaa. 
+    	 * (Jos omalla koneella on kaksi instanssia, ei tietenkään voi olla sama portti mitä toinen palvelininstanssi käyttää)
+    	 * 
+    	 * Ainakin tähän testivaiheeseen ehdotan, että käynnistetään servu custom portissa, ja jos yhdistetään uuteen serveriin niin yhdistävä taho avaa oman palvelimensa
+    	 * tohon default porttiin.
+    	 * 
+    	 * Sit kun kaks instanssia yhdistää toisiinsa oikein, voi laittaa kuntoon datastriimit. 
+    	 * 
+    	 * Mallia distributed-chat ohjelmasta
+    	 */
+    	
+    	if(parameters.getRaw().size() < 2) {
+            // Start server on the port given as a command line parameter or 1234
+            startServer(parameters.getNamed().getOrDefault("port", "1234"));
+    	}
 
-        // Connect to address given as a command line parameter "server" (default: localhost) on port given (default: 1234)
-        connectToServer(parameters.getNamed().getOrDefault("server", "localhost"), parameters.getNamed().getOrDefault("port", "1234"));
+    	if(parameters.getRaw().size() > 1) {
+    	    // Connect to address given as a command line parameter "server" (default: localhost) on port given (default: 1234)
+            connectToServer(parameters.getNamed().getOrDefault("server", "localhost"), parameters.getNamed().getOrDefault("port", "1234"));
+    	}
+ 
 
         views = new Views(mainCanvas, lowendMachine, synkistely, configuration().tickDuration, new Random().nextLong());
         this.console = window.console();
@@ -229,7 +261,7 @@ public class GorillaLogic implements GraphicalAppLogic {
      */
     protected void startServer(String port) {
         System.out.println("Starting server at port " + port);
-        // ...or at least somebody should be
+        mesh = new Mesh(Integer.parseInt(port));
     }
 
     /**
@@ -238,7 +270,7 @@ public class GorillaLogic implements GraphicalAppLogic {
      * @param port The listening port of the mesh node to connect to
      */
     protected void connectToServer(String address, String port) {
-        System.out.printf("Connecting to server at %s", address, port);
+        System.out.printf("Connecting to server at %s\n", address, port);
         // ...or at least somebody should be
     }
 
