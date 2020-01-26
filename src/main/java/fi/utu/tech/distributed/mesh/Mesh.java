@@ -1,10 +1,11 @@
 package fi.utu.tech.distributed.mesh;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -63,6 +64,18 @@ public class Mesh extends Thread {
 	public void connect(String addr, int port) {
 		try {
 			Socket socket = new Socket(addr, port);
+			
+			// Datan lähetys testi
+			InputStream in = socket.getInputStream();
+            OutputStream out = socket.getOutputStream();
+            DataOutputStream dataOut = new DataOutputStream(out);
+            DataInputStream dataIn = new DataInputStream(in);
+            
+            dataOut.writeInt(10);
+            dataOut.flush();
+            dataOut.writeInt(5);
+			
+			
 		} catch (UnknownHostException e) {
 			System.out.println("[ERROR] Unknown server IP");
 		} catch (IOException e) {
@@ -104,7 +117,7 @@ public class Mesh extends Thread {
 		private Mesh mesh;
 		
 		public Handler(Socket socket, Mesh mesh) {
-			System.out.println("Handleri spawnattu!");
+			System.out.println("New connection from "+socket.getInetAddress()+"/"+socket.getPort()+"!");
 			this.socket = socket;
 			this.mesh = mesh;
 		}
@@ -114,7 +127,14 @@ public class Mesh extends Thread {
             try {
 				InputStream iS = socket.getInputStream();
 	            OutputStream oS = socket.getOutputStream();
+	            DataOutputStream oOut = new DataOutputStream(oS);
+	            DataInputStream oIn = new DataInputStream(iS);
 	            
+	            while(true) {
+	            	// täällä luetaan tietoa
+	            	int a = oIn.readInt();
+	            	System.out.println(a);
+	            }
 	            
 			} catch (IOException e) {
 				e.printStackTrace();
