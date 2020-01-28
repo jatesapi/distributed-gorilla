@@ -54,7 +54,7 @@ public class Mesh extends Thread {
     		try {
     			System.out.println("Listening to port " + serverSocket.getLocalPort() + " at " + serverSocket.getInetAddress() + "...");
 	            Socket s = serverSocket.accept();
-    			new Handler(s, this).start();
+    			new Handler(s).start();
     		} catch (IOException e) {
     			e.printStackTrace();
     		}
@@ -67,9 +67,11 @@ public class Mesh extends Thread {
 	 * @param port Portti, jota vastapuolinen solmu kuuntelee
 	 */
 	public void connect(String addr, int port) {
+		System.out.println("Yhdistetään olemassaolevaan solmuun...");
 		try {	
 			socket = new Socket(addr, port);
-			new Handler(socket, this).start();
+			System.out.println("Soketti luotu! :)");
+			new Handler(socket).start();
 		} catch (UnknownHostException e) {
 			System.out.println("[ERROR] Unknown server IP");
 		} catch (IOException e) {
@@ -120,12 +122,9 @@ public class Mesh extends Thread {
 	class Handler extends Thread {
 		
 		private Socket socket;
-		private Mesh mesh;
 		
-		public Handler(Socket socket, Mesh mesh) {
-			System.out.println("New connection from "+socket.getRemoteSocketAddress());
+		public Handler(Socket socket) {
 			this.socket = socket;
-			this.mesh = mesh;
 		}
 		
 		@Override
