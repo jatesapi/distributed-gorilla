@@ -152,7 +152,7 @@ public class GorillaLogic implements GraphicalAppLogic {
         // Eclipse (Run as Java Application): Run -> Run configuration... -> Java Application -> Main (varies) -> Arguments -> Program arguments
 
         // Start server on the port given as a command line parameter or 1234
-        startServer(parameters.getNamed().getOrDefault("port", "1234"));
+        startServer(parameters.getNamed().getOrDefault("portti", "1234"));
 
         if(parameters.getRaw().size() > 1) {        
 	    	// Connect to address given as a command line parameter "server" (default: localhost) on port given (default: 1234)

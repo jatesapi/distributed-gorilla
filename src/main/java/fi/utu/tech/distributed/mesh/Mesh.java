@@ -11,6 +11,8 @@ import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashSet;
+import java.util.Set;
 
 import fi.utu.tech.distributed.gorilla.logic.ChatMessage;
 
@@ -21,7 +23,7 @@ public class Mesh extends Thread {
 	
 	private ServerSocket serverSocket;
 	private Socket socket;
-	private ObjectOutputStream objOut;
+	private Set<ObjectOutputStream> nodes = new HashSet<>();
 	
     /**
      * Mesh-server instance that creates a server socket bound to the given port.
@@ -34,14 +36,12 @@ public class Mesh extends Thread {
     		System.out.println("Starting the server...");
     	} catch (IOException e1) {
     		System.out.println("[ERROR] Port " +port+ " already has something running!");
-    		if(port != 1234) {
-    			System.out.println("[INFO] Finding an available port...");
-    			try {
-					serverSocket = new ServerSocket(0);
-				} catch (IOException e2) {
-					System.exit(-1);
-				}
-    		}
+			System.out.println("[INFO] Finding an available port...");
+			try {
+				serverSocket = new ServerSocket(0);
+			} catch (IOException e2) {
+				System.exit(-1);
+			}
     	}
     	System.out.println("Server started.");
 	}
@@ -57,20 +57,11 @@ public class Mesh extends Thread {
     			System.out.println("Listening to port " + serverSocket.getLocalPort() + " at " + serverSocket.getInetAddress() + "...");
 	            Socket s = serverSocket.accept();
     			new Handler(s, this).start();
-	            checkSocket(s);
     		} catch (IOException e) {
     			e.printStackTrace();
     		}
     	}
 	}
-    
-    private void checkSocket(Socket s) {
-    	if(socket == null) {
-    		System.out.println("Sokettia ei installoitu");
-    		connect(s.getInetAddress().getHostAddress(), s.getPort()-1);
-    	}
-    	
-    }
     
 	/**
 	 * Yhdistä tämä vertainen olemassaolevaan Mesh-verkkoon
@@ -78,19 +69,14 @@ public class Mesh extends Thread {
 	 * @param port Portti, jota vastapuolinen solmu kuuntelee
 	 */
 	public void connect(String addr, int port) {
-		try {
-			
-			System.out.println(addr);
-			System.out.println(port);
-			
+		try {	
 			socket = new Socket(addr, port);
 			
-			// Datan lähetys testi
 			InputStream in = socket.getInputStream();
             OutputStream out = socket.getOutputStream();
-            objOut = new ObjectOutputStream(out);
+            nodes.add(new ObjectOutputStream(out));
             ObjectInputStream objIn = new ObjectInputStream(in);
-			
+            
 			
 		} catch (UnknownHostException e) {
 			System.out.println("[ERROR] Unknown server IP");
@@ -103,14 +89,14 @@ public class Mesh extends Thread {
      * Lähetä hyötykuorma kaikille vastaanottajille
      * @param o Lähetettävä hyötykuorma
      */
-    public void broadcast(Serializable o) {
-    	
-    	try {
-    		objOut.writeObject(o);
-    	} catch (IOException io) {
-    		io.printStackTrace();
+    public void broadcast(Serializable o) {  	
+    	for(ObjectOutputStream node : nodes) {
+    		try {
+    			node.writeObject(o);
+    		} catch (IOException io) {
+    			io.printStackTrace();
+    		}
     	}
-    	
 	}
 
     /**
@@ -152,6 +138,7 @@ public class Mesh extends Thread {
 	            OutputStream oS = socket.getOutputStream();
 	            ObjectOutputStream oOut = new ObjectOutputStream(oS);
 	            ObjectInputStream oIn = new ObjectInputStream(iS);
+	            nodes.add(oOut);
 	            
 	            while(true) {
 	            	try {
@@ -167,6 +154,7 @@ public class Mesh extends Thread {
 				e.printStackTrace();
 			}
 		}
+		
 		
 		/**
 		 * Lisää token, eli "viestitunniste"
