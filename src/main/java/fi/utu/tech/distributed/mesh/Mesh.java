@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -67,10 +68,8 @@ public class Mesh extends Thread {
 	 * @param port Portti, jota vastapuolinen solmu kuuntelee
 	 */
 	public void connect(String addr, int port) {
-		System.out.println("Yhdistetään olemassaolevaan solmuun...");
 		try {	
 			socket = new Socket(addr, port);
-			System.out.println("Soketti luotu! :)");
 			new Handler(socket).start();
 		} catch (UnknownHostException e) {
 			System.out.println("[ERROR] Unknown server IP");
@@ -87,8 +86,6 @@ public class Mesh extends Thread {
     	int laskuri = 1;
     	for(ObjectOutputStream node : nodes) {
     		try {
-    			System.out.println("Laskuri: "+laskuri);
-    			System.out.println("Lähetetään: "+((ChatMessage) o).contents);
     			node.writeObject(o);
     			node.flush();
     			laskuri++;
@@ -122,9 +119,11 @@ public class Mesh extends Thread {
 	class Handler extends Thread {
 		
 		private Socket socket;
+		private ArrayList<Long> tokens;
 		
 		public Handler(Socket socket) {
 			this.socket = socket;
+			tokens = new ArrayList<>();
 		}
 		
 		@Override
@@ -138,8 +137,16 @@ public class Mesh extends Thread {
 	            
 	            while(true) {
 	            	try {
-	            		ChatMessage msg2 = (ChatMessage) oIn.readObject();
-	                    System.out.printf("Joku sanoo: %s%n", msg2.contents);
+	            		ChatMessage msg = (ChatMessage) oIn.readObject();
+	            		
+	            		long token = msg.token;
+	            		if(tokenExists(token)) {
+	            			;
+	            		} else {
+	            			addToken(token);
+	            			broadcast(msg);
+		                    System.out.printf("Joku sanoo: %s%n", msg.contents);
+	            		}
 	            	} catch (ClassNotFoundException e) {
 	            		e.printStackTrace();
 	            	}
@@ -160,6 +167,7 @@ public class Mesh extends Thread {
 		 * @param token Viestitunniste 
 		 */
 		private void addToken(long token) {
+			tokens.add(token);
 		}
 		
 		/**
@@ -169,6 +177,9 @@ public class Mesh extends Thread {
 		 * @param token Viestitunniste 
 		 */
 		private boolean tokenExists(long token) {
+			if(tokens.contains(token)) {
+				return true;
+			}
 			return false;
 		}
 		
