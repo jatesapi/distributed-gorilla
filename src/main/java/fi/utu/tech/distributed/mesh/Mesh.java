@@ -23,6 +23,7 @@ public class Mesh extends Thread {
 	private ServerSocket serverSocket;
 	private Socket socket;
 	private Set<ObjectOutputStream> nodes = new HashSet<>();
+	private ArrayList<Long> tokens;
 	
     /**
      * Mesh-server instance that creates a server socket bound to the given port.
@@ -86,6 +87,11 @@ public class Mesh extends Thread {
     	int laskuri = 1;
     	for(ObjectOutputStream node : nodes) {
     		try {
+    			// Tallennetaan solmun itsensä lähettämä viestin token
+    			ChatMessage localMsg = (ChatMessage) o;
+    			tokens.add(localMsg.token);
+    			
+    			// Lähetetään viesti tähän solmuun yhdistäneelle solmulle
     			node.writeObject(o);
     			node.flush();
     			laskuri++;
@@ -119,7 +125,6 @@ public class Mesh extends Thread {
 	class Handler extends Thread {
 		
 		private Socket socket;
-		private ArrayList<Long> tokens;
 		
 		public Handler(Socket socket) {
 			this.socket = socket;
