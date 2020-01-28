@@ -154,9 +154,10 @@ public class GorillaLogic implements GraphicalAppLogic {
         // Start server on the port given as a command line parameter or 1234
         startServer(parameters.getNamed().getOrDefault("port", "1234"));
 
-    	// Connect to address given as a command line parameter "server" (default: localhost) on port given (default: 1234)
-        connectToServer(parameters.getNamed().getOrDefault("server", "localhost"), parameters.getNamed().getOrDefault("port", "1234"));
- 
+        if(parameters.getRaw().size() > 1) {        
+	    	// Connect to address given as a command line parameter "server" (default: localhost) on port given (default: 1234)
+	        connectToServer(parameters.getNamed().getOrDefault("server", "localhost"), parameters.getNamed().getOrDefault("port", "1234"));
+        }
 
         views = new Views(mainCanvas, lowendMachine, synkistely, configuration().tickDuration, new Random().nextLong());
         this.console = window.console();
@@ -287,6 +288,7 @@ public class GorillaLogic implements GraphicalAppLogic {
      */
     protected void handleChatMessage(ChatMessage msg) {
         System.out.printf("Sinä sanot: %s%n", msg.contents);
+        mesh.broadcast(msg);
     }
 
     /**
