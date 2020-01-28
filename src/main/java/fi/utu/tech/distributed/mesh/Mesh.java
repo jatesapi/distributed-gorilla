@@ -1,7 +1,5 @@
 package fi.utu.tech.distributed.mesh;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -71,13 +69,7 @@ public class Mesh extends Thread {
 	public void connect(String addr, int port) {
 		try {	
 			socket = new Socket(addr, port);
-			
-			InputStream in = socket.getInputStream();
-            OutputStream out = socket.getOutputStream();
-            nodes.add(new ObjectOutputStream(out));
-            ObjectInputStream objIn = new ObjectInputStream(in);
-            
-			
+			new Handler(socket, this).start();
 		} catch (UnknownHostException e) {
 			System.out.println("[ERROR] Unknown server IP");
 		} catch (IOException e) {
@@ -90,9 +82,14 @@ public class Mesh extends Thread {
      * @param o Lähetettävä hyötykuorma
      */
     public void broadcast(Serializable o) {  	
+    	int laskuri = 1;
     	for(ObjectOutputStream node : nodes) {
     		try {
+    			System.out.println("Laskuri: "+laskuri);
+    			System.out.println("Lähetetään: "+((ChatMessage) o).contents);
     			node.writeObject(o);
+    			node.flush();
+    			laskuri++;
     		} catch (IOException io) {
     			io.printStackTrace();
     		}
@@ -142,8 +139,8 @@ public class Mesh extends Thread {
 	            
 	            while(true) {
 	            	try {
-	            		ChatMessage msg = (ChatMessage) oIn.readObject();
-	                    System.out.printf("Joku sanoo: %s%n", msg.contents);
+	            		ChatMessage msg2 = (ChatMessage) oIn.readObject();
+	                    System.out.printf("Joku sanoo: %s%n", msg2.contents);
 	            	} catch (ClassNotFoundException e) {
 	            		e.printStackTrace();
 	            	}
