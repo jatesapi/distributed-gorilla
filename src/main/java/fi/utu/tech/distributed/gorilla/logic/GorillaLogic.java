@@ -13,6 +13,7 @@ import javafx.application.Platform;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,6 +58,9 @@ public class GorillaLogic implements GraphicalAppLogic {
 
     // List of AI players
     private final List<Player> otherPlayers = new ArrayList<>();
+    
+    // Host that the game is connected to
+    private String host = "none";
 
     // Helpers for menu system. No need to modify
     private int c = 0;
@@ -201,6 +205,7 @@ public class GorillaLogic implements GraphicalAppLogic {
     public void joinGame(String name) {
         if (otherPlayers.size() + 1 < maxPlayers) {
             otherPlayers.add(new Player(name, new LinkedBlockingQueue<>(), false));
+            System.out.println(name + " joined the game!");
         }
     }
 
@@ -236,7 +241,7 @@ public class GorillaLogic implements GraphicalAppLogic {
      */
     protected void startServer(String port) {
         System.out.println("[Start the server at port " + port + "]");
-        mesh = new Mesh(Integer.parseInt(port));
+        mesh = new Mesh(this, Integer.parseInt(port));
         mesh.start();
     }
 
@@ -247,13 +252,35 @@ public class GorillaLogic implements GraphicalAppLogic {
      */
     protected void connectToServer(String address, String port) {
         System.out.printf("[Connect to server at %s]\n", address, port);
-        mesh.connect(address, Integer.parseInt(port));
+        try {
+        	// connect to existing mesh
+        	mesh.connect(address, Integer.parseInt(port));
+            // update the connection info
+            host = address+":"+port;
+            mesh.sendPlayerInfo(myName);
+		} catch (UnknownHostException e) {
+			System.out.println("[ERROR] Unknown server IP");
+			host = "Virhe!";
+		} catch (IOException e) {
+			System.out.println("[ERROR] Verify IP address");
+		} catch (NumberFormatException n) {
+			System.out.println("[ERROR] Bad address format");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
     }
+    
+    private void handleConnect(String rest) {
+		String[] address = rest.split(":");
+		connectToServer(address[0], address[1]);
+		
+	}
 
     /**
      * Starts a new single player game with max number of AI players
      */
     private void initGame() {
+    	
         double h = getCanvas().getHeight();
 
         // Create maxPlayers-1 AI players
@@ -268,6 +295,28 @@ public class GorillaLogic implements GraphicalAppLogic {
         GameConfiguration configuration = new GameConfiguration(gameSeed, h, names);
 
         gameState = new GameState(configuration, myName, new LinkedBlockingQueue<>(), otherPlayers);
+        views.setGameState(gameState);
+    }
+    
+    /**
+     * Starts a new multiplayer game.
+     */
+    private void initMultiplayerGame() {
+    	
+    	double h = getCanvas().getHeight();
+        List<String> names = new LinkedList<>();
+        names.add(myName);
+        for (Player player : otherPlayers) {
+        	names.add(player.name);
+        }
+        
+        List<Player> players = otherPlayers;
+        Player localPlayer = new Player(myName, new LinkedBlockingQueue<>(), true);
+        players.add(localPlayer);
+
+        GameConfiguration configuration = new GameConfiguration(gameSeed, h, names);
+
+        gameState = new GameState(configuration, players, localPlayer);
         views.setGameState(gameState);
     }
 
@@ -296,7 +345,8 @@ public class GorillaLogic implements GraphicalAppLogic {
      * Palvelinyhteys in game menu
      */
     protected void handleMultiplayer() {
-        System.out.println("Not implemented on this logic");
+    	System.out.println("Starting multiplayer game...");
+        initMultiplayerGame();
     }
 
     /**
@@ -323,6 +373,10 @@ public class GorillaLogic implements GraphicalAppLogic {
         if (cmd.contains(" ")) {
             String rest = cmd.substring(cmd.split(" ")[0].length() + 1);
             switch (cmd.split(" ")[0]) {
+            	case "connect":
+            		handleConnect(rest);
+            		updateMenuInfo();
+            		break;
                 case "q":
                 case "quit":
                 case "exit":
@@ -372,7 +426,8 @@ public class GorillaLogic implements GraphicalAppLogic {
         }
     }
 
-    /**
+
+	/**
      * Primitive AI - creates moves for AI players
      */
     private void moveAIplayers() {
@@ -390,7 +445,7 @@ public class GorillaLogic implements GraphicalAppLogic {
      * Updates the info on the bottom of the menu
      */
     protected void updateMenuInfo() {
-        views.setMenuInfo(new String[]{"Pelaajia: " + (otherPlayers.size() + 1), String.format("Yhdistetty koneeseen <-> %s", "none"), "Peli aktiivinen: " + (gameState != null)});
+        views.setMenuInfo(new String[]{"Pelaajia: " + (otherPlayers.size() + 1), String.format("Yhdistetty koneeseen <-> %s", host), "Peli aktiivinen: " + (gameState != null)});
     }
 
     /**

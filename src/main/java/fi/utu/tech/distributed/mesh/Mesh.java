@@ -14,12 +14,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 import fi.utu.tech.distributed.gorilla.logic.ChatMessage;
+import fi.utu.tech.distributed.gorilla.logic.GorillaLogic;
 
 /**
  * TODO: comment the class
  */
 public class Mesh extends Thread {
 	
+	// Current game instance
+	private GorillaLogic gameInstance;
 	private ServerSocket serverSocket;
 	private Socket socket;
 	private Set<ObjectOutputStream> nodes = new HashSet<>();
@@ -28,10 +31,13 @@ public class Mesh extends Thread {
     /**
      * Mesh-server instance that creates a server socket bound to the given port.
      * If the port is already in use, the socket is bound to any available port.
+     * @param gameInstance 
      * @param port - the port number where other instances can connect
      */
-    public Mesh(int port) {
+    public Mesh(GorillaLogic gameInstance, int port) {
     	try {
+    		this.gameInstance = gameInstance;
+    		//gameInstance.
     		serverSocket = new ServerSocket(port);
     		System.out.println("Starting the server...");
     	} catch (IOException e1) {
@@ -68,13 +74,11 @@ public class Mesh extends Thread {
 	 * @param addr Solmun ip-osoite, johon yhdistetään
 	 * @param port Portti, jota vastapuolinen solmu kuuntelee
 	 */
-	public void connect(String addr, int port) {
-		try {	
+	public void connect(String addr, int port) throws IOException, UnknownHostException {	
+		try {
 			socket = new Socket(addr, port);
 			new Handler(socket).start();
-		} catch (UnknownHostException e) {
-			System.out.println("[ERROR] Unknown server IP");
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -84,7 +88,6 @@ public class Mesh extends Thread {
      * @param o Lähetettävä hyötykuorma
      */
     public void broadcast(Serializable o) {  	
-    	int laskuri = 1;
     	for(ObjectOutputStream node : nodes) {
     		try {
     			// Tallennetaan solmun itsensä lähettämä viestin token
@@ -94,12 +97,29 @@ public class Mesh extends Thread {
     			// Lähetetään viesti tähän solmuun yhdistäneelle solmulle
     			node.writeObject(o);
     			node.flush();
-    			laskuri++;
     		} catch (IOException io) {
     			io.printStackTrace();
     		}
     	}
 	}
+    
+    /**
+     * Send player info for other nodes
+     * @param name - Player name
+     */
+    public void sendPlayerInfo(String name) {
+    	try {
+    		// Wait for streams to be up...
+    		sleep(1000); 
+    		
+	    	for(ObjectOutputStream node : nodes) {
+	    			node.writeObject(name);
+	    			node.flush();
+	    	}
+    	} catch (Exception e) {
+    		e.printStackTrace();
+   		}
+    }
 
     /**
      * Lähetä hyötykuorma valitulle vertaiselle
@@ -142,16 +162,20 @@ public class Mesh extends Thread {
 	            
 	            while(true) {
 	            	try {
-	            		ChatMessage msg = (ChatMessage) oIn.readObject();
 	            		
-	            		long token = msg.token;
-	            		if(tokenExists(token)) {
-	            			;
-	            		} else {
-	            			addToken(token);
-	            			broadcast(msg);
-		                    System.out.printf("Joku sanoo: %s%n", msg.contents);
+	            		Object data = oIn.readObject();
+	            		
+	            		if(data instanceof String) {
+	            			String name = (String) data;
+	            			gameInstance.joinGame(name);
+            			
+	            		} else if (data instanceof ChatMessage) {
+	            			ChatMessage msg = (ChatMessage) data;
+		            		handleChatMessage(msg);
 	            		}
+	            		
+	            	
+	            		
 	            	} catch (ClassNotFoundException e) {
 	            		e.printStackTrace();
 	            	}
@@ -164,6 +188,17 @@ public class Mesh extends Thread {
 		}
 		
 		
+		private void handleChatMessage(ChatMessage msg) {
+			long token = msg.token;
+    		if(tokenExists(token)) {
+    			;
+    		} else {
+    			addToken(token);
+    			broadcast(msg);
+                System.out.printf("Joku sanoo: %s%n", msg.contents);
+    		}
+		}
+
 		/**
 		 * Lisää token, eli "viestitunniste"
 		 * Käytännössä merkkaa viestin tällä tunnisteella luetuksi
