@@ -6,6 +6,7 @@ import fi.utu.tech.distributed.gorilla.engine.Region;
 import fi.utu.tech.oomkit.app.Scheduled;
 import fi.utu.tech.oomkit.canvas.Point2D;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -16,7 +17,7 @@ import java.util.function.Consumer;
  * TODO: You may want to compare the constructors
  * The other may be more suitable for multiplayer
  */
-public class GameState implements Scheduled {
+public class GameState implements Scheduled, Serializable {
     public final GameConfiguration configuration;
     private final List<Player> players = new ArrayList<>();
     private final Player me;
@@ -129,6 +130,10 @@ public class GameState implements Scheduled {
 
     public Player getLocalPlayer() {
         return me;
+    }
+    
+    public GameConfiguration getConfiguration() {
+    	return configuration;
     }
 
     public List<Player> getPlayers() {

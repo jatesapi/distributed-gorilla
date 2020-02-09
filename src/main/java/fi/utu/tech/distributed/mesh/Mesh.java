@@ -14,7 +14,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import fi.utu.tech.distributed.gorilla.logic.ChatMessage;
+import fi.utu.tech.distributed.gorilla.logic.GameMode;
+import fi.utu.tech.distributed.gorilla.logic.GameState;
 import fi.utu.tech.distributed.gorilla.logic.GorillaLogic;
+import javafx.application.Platform;
 
 /**
  * TODO: comment the class
@@ -135,6 +138,31 @@ public class Mesh extends Thread {
      */
     public void close() {
 	}
+    
+	public void sendGameChange(GameState state) {
+		
+		MeshMessage msg = MeshMessage.buildMessage(state);
+		
+    	try {
+	    	for(ObjectOutputStream node : nodes) {
+	    		node.writeObject(msg);
+	    		node.flush();
+	    	}
+    	} catch (Exception e) {
+    		e.printStackTrace();
+   		}
+	}
+	
+	public void sendGameMode(int mode) {
+    	try {
+	    	for(ObjectOutputStream node : nodes) {
+	    		node.writeObject(mode);
+	    		node.flush();
+	    	}
+    	} catch (Exception e) {
+    		e.printStackTrace();
+   		}
+	}
 	
     
     
@@ -165,13 +193,40 @@ public class Mesh extends Thread {
 	            		
 	            		Object data = oIn.readObject();
 	            		
-	            		if(data instanceof String) {
+	            		if(data instanceof Integer) {
+	            			int action = (Integer) data;
+	            			switch(action) {
+	            			// start multiplayer
+	            			case 1:
+	            				Platform.runLater(new Runnable() {
+		            				@Override
+		            				public void run() {
+			            				gameInstance.setMultiplayerMode(GameMode.Game);
+		            				}
+		            			});
+	            				break;
+	            			// quit
+	            			case 0:
+	            				break;
+	            			}
+	            		}
+	            		
+	            		else if(data instanceof String) {
 	            			String name = (String) data;
 	            			gameInstance.joinGame(name);
             			
 	            		} else if (data instanceof ChatMessage) {
 	            			ChatMessage msg = (ChatMessage) data;
 		            		handleChatMessage(msg);
+	            		
+	            		} else if (data instanceof MeshMessage) {
+	            			MeshMessage msg = (MeshMessage) data;
+	            			Platform.runLater(new Runnable() {
+	            				@Override
+	            				public void run() {
+	            					gameInstance.setGameState(MeshMessage.getGameState(msg));
+	            				}
+	            			});
 	            		}
 	            		
 	            	
@@ -179,7 +234,6 @@ public class Mesh extends Thread {
 	            	} catch (ClassNotFoundException e) {
 	            		e.printStackTrace();
 	            	}
-	            	
 	            }
 	            
 			} catch (IOException e) {

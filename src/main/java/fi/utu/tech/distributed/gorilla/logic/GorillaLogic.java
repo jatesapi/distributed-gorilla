@@ -120,7 +120,7 @@ public class GorillaLogic implements GraphicalAppLogic {
                             }
                             break;
                         case 1:
-                            handleMultiplayer();
+                        	setMultiplayerMode(GameMode.Game);
                             break;
                         case 2:
                             Platform.exit();
@@ -174,7 +174,7 @@ public class GorillaLogic implements GraphicalAppLogic {
         // Populate menu
         views.setMenu("Gorillasota 2029", new String[]{
                 "Aloita / lopeta peli",
-                "Palvelinyhteys",
+                "Moninpeli",
                 "Lopeta"
         });
 
@@ -206,6 +206,7 @@ public class GorillaLogic implements GraphicalAppLogic {
         if (otherPlayers.size() + 1 < maxPlayers) {
             otherPlayers.add(new Player(name, new LinkedBlockingQueue<>(), false));
             System.out.println(name + " joined the game!");
+            updateMenuInfo();
         }
     }
 
@@ -227,12 +228,24 @@ public class GorillaLogic implements GraphicalAppLogic {
      */
     public void setMode(GameMode mode) {
         // Start new game if not running
-        if (mode == GameMode.Game && gameState == null)
+        if (mode == GameMode.Game && gameState == null) {
             initGame();
+        }
 
+            
         gameMode = mode;
         views.setMode(mode);
         updateMenuInfo();
+    }
+    
+    public void setMultiplayerMode(GameMode mode) {
+    	if(mode == GameMode.Game && gameState == null) {
+    		initMultiplayerGame();
+    	}
+    	
+    	gameMode = mode;
+    	views.setMode(mode);
+    	updateMenuInfo();
     }
 
     /**
@@ -304,6 +317,7 @@ public class GorillaLogic implements GraphicalAppLogic {
     private void initMultiplayerGame() {
     	
     	double h = getCanvas().getHeight();
+    	
         List<String> names = new LinkedList<>();
         names.add(myName);
         for (Player player : otherPlayers) {
@@ -317,7 +331,15 @@ public class GorillaLogic implements GraphicalAppLogic {
         GameConfiguration configuration = new GameConfiguration(gameSeed, h, names);
 
         gameState = new GameState(configuration, players, localPlayer);
+        System.out.println("Lähetetään gameState");
+        mesh.sendGameMode(1);
+        mesh.sendGameChange(gameState);
         views.setGameState(gameState);
+    }
+    
+    public void setGameState(GameState state) {
+    	gameState = state;
+    	views.setGameState(gameState);
     }
 
     /**
@@ -338,15 +360,6 @@ public class GorillaLogic implements GraphicalAppLogic {
     protected void handleChatMessage(ChatMessage msg) {
         System.out.printf("Sinä sanot: %s%n", msg.contents);
         mesh.broadcast(msg);
-    }
-
-    /**
-     * Handles starting a multiplayer game. This event is usually fired by selecting
-     * Palvelinyhteys in game menu
-     */
-    protected void handleMultiplayer() {
-    	System.out.println("Starting multiplayer game...");
-        initMultiplayerGame();
     }
 
     /**
