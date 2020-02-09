@@ -35,6 +35,7 @@ public class GorillaLogic implements GraphicalAppLogic {
     private GameMode gameMode;
 
     protected String myName = "Mää";
+    private Player localPlayer = new Player(myName, new LinkedBlockingQueue<>(), true);
     protected final int gameSeed = 1;
     protected final int maxPlayers = 2;
 
@@ -58,6 +59,8 @@ public class GorillaLogic implements GraphicalAppLogic {
 
     // List of AI players
     private final List<Player> otherPlayers = new ArrayList<>();
+    
+    // List of connected nodes
     
     // Host that the game is connected to
     private String host = "none";
@@ -209,6 +212,15 @@ public class GorillaLogic implements GraphicalAppLogic {
             updateMenuInfo();
         }
     }
+    
+    public void joinGame(Player player) {
+		player.local = false;
+    	if (otherPlayers.size() +1 < maxPlayers) {
+    		otherPlayers.add(player);
+    		System.out.println(player.name + " joined the game!");
+    		updateMenuInfo();
+    	}
+    }
 
     /**
      * Called peridically by OOMkit, makes game to proceed
@@ -270,7 +282,7 @@ public class GorillaLogic implements GraphicalAppLogic {
         	mesh.connect(address, Integer.parseInt(port));
             // update the connection info
             host = address+":"+port;
-            mesh.sendPlayerInfo(myName);
+            mesh.sendPlayerInfo(localPlayer);
 		} catch (UnknownHostException e) {
 			System.out.println("[ERROR] Unknown server IP");
 			host = "Virhe!";
@@ -319,19 +331,17 @@ public class GorillaLogic implements GraphicalAppLogic {
     	double h = getCanvas().getHeight();
     	
         List<String> names = new LinkedList<>();
-        names.add(myName);
+        names.add(localPlayer.name);
         for (Player player : otherPlayers) {
         	names.add(player.name);
         }
         
         List<Player> players = otherPlayers;
-        Player localPlayer = new Player(myName, new LinkedBlockingQueue<>(), true);
         players.add(localPlayer);
 
         GameConfiguration configuration = new GameConfiguration(gameSeed, h, names);
 
         gameState = new GameState(configuration, players, localPlayer);
-        System.out.println("Lähetetään gameState");
         mesh.sendGameMode(1);
         mesh.sendGameChange(gameState);
         views.setGameState(gameState);
@@ -376,6 +386,7 @@ public class GorillaLogic implements GraphicalAppLogic {
      */
     protected void handleNameChange(String newName) {
         myName = newName;
+        localPlayer.name = myName;
     }
 
     /**
@@ -487,4 +498,19 @@ public class GorillaLogic implements GraphicalAppLogic {
                 break;
         }
     }
+
+    /**
+     * Check if this multiplayer instance has the given player.
+     * @param player
+     * @return
+     */
+	public boolean playerExists(Player player) {
+		if(otherPlayers.contains(player))
+			return true;
+		return false;
+	}
+
+	public Player getLocalPlayer() {
+		return localPlayer;
+	}
 }

@@ -17,6 +17,7 @@ import fi.utu.tech.distributed.gorilla.logic.ChatMessage;
 import fi.utu.tech.distributed.gorilla.logic.GameMode;
 import fi.utu.tech.distributed.gorilla.logic.GameState;
 import fi.utu.tech.distributed.gorilla.logic.GorillaLogic;
+import fi.utu.tech.distributed.gorilla.logic.Player;
 import javafx.application.Platform;
 
 /**
@@ -108,15 +109,15 @@ public class Mesh extends Thread {
     
     /**
      * Send player info for other nodes
-     * @param name - Player name
+     * @param player - Player name
      */
-    public void sendPlayerInfo(String name) {
+    public void sendPlayerInfo(Player player) {
     	try {
     		// Wait for streams to be up...
     		sleep(1000); 
     		
 	    	for(ObjectOutputStream node : nodes) {
-	    			node.writeObject(name);
+	    			node.writeObject(player);
 	    			node.flush();
 	    	}
     	} catch (Exception e) {
@@ -211,10 +212,12 @@ public class Mesh extends Thread {
 	            			}
 	            		}
 	            		
-	            		else if(data instanceof String) {
-	            			String name = (String) data;
-	            			gameInstance.joinGame(name);
-            			
+	            		else if(data instanceof Player) {
+	            			Player player = (Player) data;
+	            			if(!gameInstance.playerExists(player)) {
+		            			gameInstance.joinGame(player);
+		            			sendPlayerInfo(gameInstance.getLocalPlayer());
+	            			}
 	            		} else if (data instanceof ChatMessage) {
 	            			ChatMessage msg = (ChatMessage) data;
 		            		handleChatMessage(msg);
@@ -249,7 +252,7 @@ public class Mesh extends Thread {
     		} else {
     			addToken(token);
     			broadcast(msg);
-                System.out.printf("Joku sanoo: %s%n", msg.contents);
+                System.out.printf("%s sanoo: %s%n", msg.sender, msg.contents);
     		}
 		}
 

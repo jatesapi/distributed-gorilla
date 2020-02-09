@@ -13,12 +13,12 @@ public class Player implements Serializable {
     /**
      * Player's name.
      */
-    public final String name;
+    public String name;
 
     /**
      * Is this a local player. Might affect e.g. the rendered graphics color.
      */
-    public final boolean local;
+    public boolean local;
 
     /**
      * Determines the pixel offset of the banana launch position.
