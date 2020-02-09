@@ -3,6 +3,7 @@ package fi.utu.tech.distributed.gorilla.logic;
 import fi.utu.tech.distributed.gorilla.views.MainCanvas;
 import fi.utu.tech.distributed.gorilla.views.Views;
 import fi.utu.tech.distributed.mesh.Mesh;
+import fi.utu.tech.distributed.mesh.MeshMessage;
 import fi.utu.tech.oomkit.app.AppConfiguration;
 import fi.utu.tech.oomkit.app.GraphicalAppLogic;
 import fi.utu.tech.oomkit.canvas.Canvas;
@@ -12,7 +13,6 @@ import javafx.application.Application;
 import javafx.application.Platform;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -298,7 +298,6 @@ public class GorillaLogic implements GraphicalAppLogic {
     private void handleConnect(String rest) {
 		String[] address = rest.split(":");
 		connectToServer(address[0], address[1]);
-		
 	}
 
     /**
@@ -340,15 +339,15 @@ public class GorillaLogic implements GraphicalAppLogic {
         players.add(localPlayer);
 
         GameConfiguration configuration = new GameConfiguration(gameSeed, h, names);
-
+        
         gameState = new GameState(configuration, players, localPlayer);
         mesh.sendGameMode(1);
-        mesh.sendGameChange(gameState);
+        mesh.sendGameChange(MeshMessage.buildMessage(gameState));
         views.setGameState(gameState);
     }
     
-    public void setGameState(GameState state) {
-    	gameState = state;
+    public void setGameState(MeshMessage msg) {
+    	gameState = MeshMessage.getGameState(msg, localPlayer);
     	views.setGameState(gameState);
     }
 
@@ -387,6 +386,7 @@ public class GorillaLogic implements GraphicalAppLogic {
     protected void handleNameChange(String newName) {
         myName = newName;
         localPlayer.name = myName;
+        System.out.println("Nimi vaihdettu. Uusi nimi \""+myName+"\"");
     }
 
     /**

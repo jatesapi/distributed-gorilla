@@ -140,9 +140,7 @@ public class Mesh extends Thread {
     public void close() {
 	}
     
-	public void sendGameChange(GameState state) {
-		
-		MeshMessage msg = MeshMessage.buildMessage(state);
+	public void sendGameChange(MeshMessage msg) {
 		
     	try {
 	    	for(ObjectOutputStream node : nodes) {
@@ -227,7 +225,7 @@ public class Mesh extends Thread {
 	            			Platform.runLater(new Runnable() {
 	            				@Override
 	            				public void run() {
-	            					gameInstance.setGameState(MeshMessage.getGameState(msg));
+	            					gameInstance.setGameState(msg);
 	            				}
 	            			});
 	            		}

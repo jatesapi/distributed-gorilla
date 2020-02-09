@@ -76,7 +76,7 @@ public class Player implements Serializable {
         readMoves();
         if (!Double.isNaN(angle) && !Double.isNaN(velocity)) {
             // for debugging
-            if (false)
+            if (true)
                 System.out.println(name + " heittää, " + angle + "° @ " + velocity);
 
             Move move = new MoveThrowBanana(angle, velocity);

@@ -7,24 +7,25 @@ import fi.utu.tech.distributed.gorilla.logic.GameConfiguration;
 import fi.utu.tech.distributed.gorilla.logic.GameState;
 import fi.utu.tech.distributed.gorilla.logic.Player;
 
+/**
+ * Serializes parts of the GameState object.
+ */
 public class MeshMessage implements Serializable {
 	
 	private GameConfiguration configuration;
 	private List<Player> players;
-	private Player me;
 	
-	public MeshMessage(GameConfiguration configuration, List<Player> players, Player me) {
+	public MeshMessage(GameConfiguration configuration, List<Player> players) {
 		this.configuration = configuration;
 		this.players = players;
-		this.me = me;
 	}
 	
-	public static GameState getGameState(MeshMessage msg) {
-		return new GameState(msg.configuration, msg.players, msg.me);
+	public static GameState getGameState(MeshMessage msg, Player me) {
+		return new GameState(msg.configuration, msg.players, me);
 	}
 	
 	public static MeshMessage buildMessage(GameState state) {
-		return new MeshMessage(state.getConfiguration(), state.getPlayers(), state.getLocalPlayer());
+		return new MeshMessage(state.getConfiguration(), state.getPlayers());
 	}
 	
 }
