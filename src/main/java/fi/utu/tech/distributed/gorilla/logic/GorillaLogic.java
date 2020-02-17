@@ -3,7 +3,7 @@ package fi.utu.tech.distributed.gorilla.logic;
 import fi.utu.tech.distributed.gorilla.views.MainCanvas;
 import fi.utu.tech.distributed.gorilla.views.Views;
 import fi.utu.tech.distributed.mesh.Mesh;
-import fi.utu.tech.distributed.mesh.MeshMessage;
+import fi.utu.tech.distributed.mesh.OnlinePlayer;
 import fi.utu.tech.oomkit.app.AppConfiguration;
 import fi.utu.tech.oomkit.app.GraphicalAppLogic;
 import fi.utu.tech.oomkit.canvas.Canvas;
@@ -35,7 +35,9 @@ public class GorillaLogic implements GraphicalAppLogic {
     private GameMode gameMode;
 
     protected String myName = "Mää";
-    private Player localPlayer = new Player(myName, new LinkedBlockingQueue<>(), true);
+    private OnlinePlayer localPlayer = new OnlinePlayer(myName);
+    
+    //private Player localPlayer = new Player(myName, new LinkedBlockingQueue<>(), true);
     protected final int gameSeed = 1;
     protected final int maxPlayers = 2;
 
@@ -61,6 +63,10 @@ public class GorillaLogic implements GraphicalAppLogic {
     private final List<Player> otherPlayers = new ArrayList<>();
     
     // List of connected nodes
+    private List<OnlinePlayer> onlinePlayers = new ArrayList<>();
+    
+    private List<Player> currentPlayers;
+    private Player me;
     
     // Host that the game is connected to
     private String host = "none";
@@ -123,7 +129,8 @@ public class GorillaLogic implements GraphicalAppLogic {
                             }
                             break;
                         case 1:
-                        	setMultiplayerMode(GameMode.Game);
+                        	setMultiplayerMode();
+                        	initMultiplayer();
                             break;
                         case 2:
                             Platform.exit();
@@ -213,13 +220,13 @@ public class GorillaLogic implements GraphicalAppLogic {
         }
     }
     
-    public void joinGame(Player player) {
-		player.local = false;
-    	if (otherPlayers.size() +1 < maxPlayers) {
-    		otherPlayers.add(player);
-    		System.out.println(player.name + " joined the game!");
-    		updateMenuInfo();
-    	}
+    /**
+     * Adds new online players to the game.
+     * @param player - another mesh node
+     */
+    public void joinGame(OnlinePlayer player) {
+    	onlinePlayers.add(player);
+    	System.out.println(player.name + " joined the game!");
     }
 
     /**
@@ -250,13 +257,9 @@ public class GorillaLogic implements GraphicalAppLogic {
         updateMenuInfo();
     }
     
-    public void setMultiplayerMode(GameMode mode) {
-    	if(mode == GameMode.Game && gameState == null) {
-    		initMultiplayerGame();
-    	}
-    	
-    	gameMode = mode;
-    	views.setMode(mode);
+    public void setMultiplayerMode() {
+    	gameMode = GameMode.Game;
+    	views.setMode(gameMode);
     	updateMenuInfo();
     }
 
@@ -325,29 +328,33 @@ public class GorillaLogic implements GraphicalAppLogic {
     /**
      * Starts a new multiplayer game.
      */
-    private void initMultiplayerGame() {
-    	
+    private void initMultiplayer() {
+    
     	double h = getCanvas().getHeight();
     	
-        List<String> names = new LinkedList<>();
-        names.add(localPlayer.name);
-        for (Player player : otherPlayers) {
-        	names.add(player.name);
-        }
-        
-        List<Player> players = otherPlayers;
-        players.add(localPlayer);
+    	currentPlayers = new ArrayList<>();
+    	me = new Player(localPlayer.name, new LinkedBlockingQueue<Move>(), true);
+    	currentPlayers.add(me);
+    	
+    	List<String> names = new LinkedList<>();
+    	names.add(me.name);
+    	
+    	for(OnlinePlayer p : onlinePlayers) {
+    		Player player = new Player(p.name, new LinkedBlockingQueue<Move>(), false); 
+    		currentPlayers.add(player);
+    		names.add(player.name);
+    	}
 
         GameConfiguration configuration = new GameConfiguration(gameSeed, h, names);
         
-        gameState = new GameState(configuration, players, localPlayer);
+        gameState = new GameState(configuration, currentPlayers, me);
         mesh.sendGameMode(1);
-        mesh.sendGameChange(MeshMessage.buildMessage(gameState));
+        mesh.sendGameUpdate(configuration);
         views.setGameState(gameState);
     }
     
-    public void setGameState(MeshMessage msg) {
-    	gameState = MeshMessage.getGameState(msg, localPlayer);
+    public void setGameState(GameConfiguration conf) {
+    	gameState = new GameState(conf, currentPlayers, me);
     	views.setGameState(gameState);
     }
 
@@ -381,6 +388,7 @@ public class GorillaLogic implements GraphicalAppLogic {
 
     /**
      * Handles name change. Fired by "name" command
+     * Only changes your local name.
      * @param newName Your new name
      */
     protected void handleNameChange(String newName) {
@@ -504,13 +512,28 @@ public class GorillaLogic implements GraphicalAppLogic {
      * @param player
      * @return
      */
-	public boolean playerExists(Player player) {
-		if(otherPlayers.contains(player))
+	public boolean playerAlreadyJoined(OnlinePlayer player) {
+		if(onlinePlayers.contains(player))
 			return true;
 		return false;
 	}
 
-	public Player getLocalPlayer() {
+	public OnlinePlayer getOnlinePlayer() {
 		return localPlayer;
 	}
+
+	public void joinMultiplayer() {
+		setMultiplayerMode();
+		
+		currentPlayers = new ArrayList<>();
+    	me = new Player(localPlayer.name, new LinkedBlockingQueue<Move>(), true);
+    	
+    	for(OnlinePlayer p : onlinePlayers) {
+    		Player player = new Player(p.name, new LinkedBlockingQueue<Move>(), false); 
+    		currentPlayers.add(player);
+    	}
+    	
+    	currentPlayers.add(me);
+	}
+	
 }
