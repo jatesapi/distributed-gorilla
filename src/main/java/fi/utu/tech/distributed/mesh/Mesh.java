@@ -330,7 +330,8 @@ public class Mesh extends Thread {
     			// New message received, add the token to the list and broadcast if further
     			addToken(token);
     			broadcast(msg);
-                System.out.printf("%s sanoo: %s%n", msg.sender, msg.contents);
+    			gameInstance.printMessage(msg.sender, msg.contents);
+                //System.out.printf("%s sanoo: %s%n", msg.sender, msg.contents);
     		}
 		}
 

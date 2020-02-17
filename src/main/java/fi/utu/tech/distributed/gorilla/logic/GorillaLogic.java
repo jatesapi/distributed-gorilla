@@ -53,7 +53,7 @@ public class GorillaLogic implements GraphicalAppLogic {
     private final int tickDuration = 20;
 
     // no comment
-    private final boolean synkistely = false;
+    private final boolean synkistely = true;
 
     // true = you can check from the text console if the computer is too slow to render all frames
     // the system will display 'Frame skipped!' if the tick() loop takes too long.
@@ -541,6 +541,10 @@ public class GorillaLogic implements GraphicalAppLogic {
 
 	public void updateMove(MoveThrowBanana move, Player player) {
 		gameState.addPlayerMove(move, player);
+	}
+
+	public void printMessage(String sender, String contents) {
+		System.out.printf("%s sanoo: %s%n", sender, contents);
 	}
 	
 }

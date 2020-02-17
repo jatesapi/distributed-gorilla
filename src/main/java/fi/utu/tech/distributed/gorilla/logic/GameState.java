@@ -149,10 +149,8 @@ public class GameState implements Scheduled, Serializable {
     }
     
     public void addPlayerMove(Move move, Player player) {
-    	System.out.println("Lisätään pelaajalle siirto");
     	for(Player p : players) {
     		if(p.equals(player)) {
-    			System.out.println("Pelaajalle "+p.name+" lisättiin siirto");
     			p.moves.add(move);
     		}
     	}
