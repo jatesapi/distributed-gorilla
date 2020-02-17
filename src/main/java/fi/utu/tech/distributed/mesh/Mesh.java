@@ -16,6 +16,8 @@ import fi.utu.tech.distributed.gorilla.logic.ChatMessage;
 import fi.utu.tech.distributed.gorilla.logic.GameConfiguration;
 import fi.utu.tech.distributed.gorilla.logic.GameMode;
 import fi.utu.tech.distributed.gorilla.logic.GorillaLogic;
+import fi.utu.tech.distributed.gorilla.logic.MoveThrowBanana;
+import fi.utu.tech.distributed.gorilla.logic.Player;
 import javafx.application.Platform;
 
 /**
@@ -179,6 +181,25 @@ public class Mesh extends Thread {
     		e.printStackTrace();
    		}
 	}
+	
+	/**
+	 * 
+	 * @param mtb
+	 * @param player
+	 */
+	public void sendPlayerThrow(MoveThrowBanana mtb, Player player) {
+		try {
+			for(ObjectOutputStream node : nodes) {
+				node.writeObject(mtb);
+				node.flush();
+				node.writeObject(player);
+				node.flush();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
     
     
     /**
@@ -238,6 +259,14 @@ public class Mesh extends Thread {
 	            		} else if (data instanceof GameConfiguration) {
 	            			GameConfiguration conf = (GameConfiguration) data;
 	            			handleGameStateUpdate(conf);
+	            			
+	            		} else if(data instanceof MoveThrowBanana) {
+	            			MoveThrowBanana move = (MoveThrowBanana) data;
+	            			while(true) {
+	            				Player player = (Player) oIn.readObject();
+		            			gameInstance.updateMove(move, player);
+		            			break;
+	            			}
 	            		}
 	            		
 	            	} catch (ClassNotFoundException e) {
@@ -325,5 +354,6 @@ public class Mesh extends Thread {
 			return false;
 		}
     }
+
 
 }

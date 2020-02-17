@@ -384,6 +384,9 @@ public class GorillaLogic implements GraphicalAppLogic {
      */
     protected void handleThrowBanana(MoveThrowBanana mtb) {
         gameState.addLocalPlayerMove(mtb);
+        if(!onlinePlayers.isEmpty()) {
+        	mesh.sendPlayerThrow(mtb, me);
+        }
     }
 
     /**
@@ -534,6 +537,10 @@ public class GorillaLogic implements GraphicalAppLogic {
     	}
     	
     	currentPlayers.add(me);
+	}
+
+	public void updateMove(MoveThrowBanana move, Player player) {
+		gameState.addPlayerMove(move, player);
 	}
 	
 }

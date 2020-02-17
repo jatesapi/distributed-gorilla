@@ -3,6 +3,7 @@ package fi.utu.tech.distributed.gorilla.logic;
 import fi.utu.tech.oomkit.canvas.Point2D;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -84,5 +85,17 @@ public class Player implements Serializable {
             return move;
         }
         return null;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+    	if(this == o)
+    		return true;
+    	if(o == null)
+    		return false;
+    	if(getClass() != o.getClass())
+    		return false;
+    	Player  player = (Player) o;
+    	return Objects.equals(name, player.name) && Objects.equals(launchPos, player.launchPos);
     }
 }

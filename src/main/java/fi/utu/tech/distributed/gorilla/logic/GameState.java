@@ -147,6 +147,16 @@ public class GameState implements Scheduled, Serializable {
     public void addLocalPlayerMove(Move move) {
         me.moves.add(move);
     }
+    
+    public void addPlayerMove(Move move, Player player) {
+    	System.out.println("Lisätään pelaajalle siirto");
+    	for(Player p : players) {
+    		if(p.equals(player)) {
+    			System.out.println("Pelaajalle "+p.name+" lisättiin siirto");
+    			p.moves.add(move);
+    		}
+    	}
+    }
 
     public double turnTimeLeft() {
         return currentTurn.startTimeStamp == -1 ? -1 : currentTurn.turnLength - (getEngine().currentTimeStamp() - currentTurn.startTimeStamp);
